@@ -8,27 +8,20 @@ function init() {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       username TEXT UNIQUE,
       password TEXT,
-      role TEXT DEFAULT 'employee'
+      role TEXT DEFAULT 'employee',
+      email TEXT
     );`
   ).run();
-
-  const columns = db.prepare("PRAGMA table_info(users)").all();
-  const hasEmail = columns.some((col) => col.name === "email");
-  if (!hasEmail) {
-    db.prepare("ALTER TABLE users ADD COLUMN email TEXT").run();
-    console.log("Added email column to users table");
-  }
 
   db.prepare(
     `
     CREATE TABLE IF NOT EXISTS shifts (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
-      user_id INTEGER,
+      username TEXT,
       shift_date TEXT,
       start_time TEXT,
       end_time TEXT,
-      note TEXT,
-      FOREIGN KEY (user_id) REFERENCES users(id)
+      note TEXT
     );`
   ).run();
 
@@ -65,29 +58,31 @@ module.exports = {
     db
       .prepare("SELECT id, username, role, email FROM users WHERE id = ?")
       .get(id),
-  createShift: (user_id, shift_date, start_time, end_time, note = "") => {
+  createShift: (username, shift_date, start_time, end_time, note = "") => {
     const stmt = db.prepare(
-      "INSERT INTO shifts (user_id, shift_date, start_time, end_time, note) VALUES (?, ?, ?, ?, ?)"
+      "INSERT INTO shifts (username, shift_date, start_time, end_time, note) VALUES (?, ?, ?, ?, ?)"
     );
-    const info = stmt.run(user_id, shift_date, start_time, end_time, note);
+    const info = stmt.run(username, shift_date, start_time, end_time, note);
     return db
       .prepare("SELECT * FROM shifts WHERE id = ?")
       .get(info.lastInsertRowid);
   },
+  updateShift: (id, username, shift_date, start_time, end_time, note) => {
+    const stmt = db.prepare(
+      "UPDATE shifts SET username=?, shift_date=?, start_time=?, end_time=?, note=? WHERE id=?"
+    );
+    stmt.run(username, shift_date, start_time, end_time, note, id);
+    return db.prepare("SELECT * FROM shifts WHERE id=?").get(id);
+  },
+  deleteShift: (id) => {
+    db.prepare("DELETE FROM shifts WHERE id=?").run(id);
+  },
   getAllShifts: () =>
+    db.prepare("SELECT * FROM shifts ORDER BY shift_date, start_time").all(),
+  getShiftsByUsername: (username) =>
     db
       .prepare(
-        `
-    SELECT s.*, u.username as user_name
-    FROM shifts s LEFT JOIN users u ON s.user_id = u.id
-    ORDER BY shift_date, start_time
-    `
+        "SELECT * FROM shifts WHERE username = ? ORDER BY shift_date, start_time"
       )
-      .all(),
-  getShiftsByUser: (user_id) =>
-    db
-      .prepare(
-        "SELECT * FROM shifts WHERE user_id = ? ORDER BY shift_date, start_time"
-      )
-      .all(user_id),
+      .all(username),
 };

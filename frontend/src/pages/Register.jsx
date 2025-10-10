@@ -11,7 +11,7 @@ function Register() {
     e.preventDefault();
 
     if (password !== confirmPassword) {
-      alert("Passwords don't match");
+      alert("Пароли не совпадают");
       return;
     }
 
@@ -33,7 +33,7 @@ function Register() {
   }
 
   return (
-    <div style={{ padding: 20 }}>
+    <div style={{ padding: 20, margin: "0 auto", maxWidth: "300px" }}>
       <h2>Регистрация</h2>
       <form
         style={{ display: "flex", flexDirection: "column", gap: 10 }}

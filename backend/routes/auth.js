@@ -8,10 +8,13 @@ require("dotenv").config();
 router.post("/register", async (req, res) => {
   const { username, password } = req.body;
   if (!username || !password)
-    return res.status(400).json({ error: "username & password required" });
+    return res.status(400).json({ error: "Имя и пароль обязательны" });
 
   const exists = db.getUserByUsername(username);
-  if (exists) return res.status(400).json({ error: "user exists" });
+  if (exists)
+    return res
+      .status(400)
+      .json({ error: "Пользователь с таким именем уже существует" });
 
   const hash = await bcrypt.hash(password, 10);
   const id = db.createUser(username, hash);
@@ -28,10 +31,10 @@ router.post("/login", async (req, res) => {
   const { username, password } = req.body;
 
   const user = db.getUserByUsername(username);
-  if (!user) return res.status(400).json({ error: "invalid credentials" });
+  if (!user) return res.status(400).json({ error: "Неправильные данные" });
 
   const ok = await bcrypt.compare(password, user.password);
-  if (!ok) return res.status(400).json({ error: "invalid credentials" });
+  if (!ok) return res.status(400).json({ error: "Неправильные данные" });
 
   const token = jwt.sign(
     {

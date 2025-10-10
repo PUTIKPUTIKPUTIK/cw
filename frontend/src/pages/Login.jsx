@@ -26,7 +26,7 @@ function Login() {
   }
 
   return (
-    <div style={{ padding: 20 }}>
+    <div style={{ padding: 20, margin: "0 auto", maxWidth: "300px" }}>
       <h2>Вход</h2>
       <form
         style={{
