@@ -34,7 +34,7 @@ function Register() {
 
   return (
     <div style={{ padding: 20 }}>
-      <h2>Sign Up</h2>
+      <h2>Регистрация</h2>
       <form
         style={{ display: "flex", flexDirection: "column", gap: 10 }}
         onSubmit={submit}
@@ -56,7 +56,7 @@ function Register() {
           value={confirmPassword}
           onChange={(e) => setConfirmPassword(e.target.value)}
         />
-        <button type="submit">Submit</button>
+        <button type="submit">Зарегистрироваться</button>
       </form>
     </div>
   );

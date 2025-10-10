@@ -27,7 +27,7 @@ function Login() {
 
   return (
     <div style={{ padding: 20 }}>
-      <h2>Sign In</h2>
+      <h2>Вход</h2>
       <form
         style={{
           display: "flex",
@@ -48,9 +48,9 @@ function Login() {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
         />
-        <button type="submit">Submit</button>
+        <button type="submit">Войти</button>
       </form>
-      <Link to="/register">Sign Up</Link>
+      <Link to="/register">Регистрация</Link>
     </div>
   );
 }
