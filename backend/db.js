@@ -12,6 +12,13 @@ function init() {
     );`
   ).run();
 
+  const columns = db.prepare("PRAGMA table_info(users)").all();
+  const hasEmail = columns.some((col) => col.name === "email");
+  if (!hasEmail) {
+    db.prepare("ALTER TABLE users ADD COLUMN email TEXT").run();
+    console.log("Added email column to users table");
+  }
+
   db.prepare(
     `
     CREATE TABLE IF NOT EXISTS shifts (
@@ -32,8 +39,8 @@ function init() {
     const bcrypt = require("bcrypt");
     const hashed = bcrypt.hashSync("admin", 10);
     db.prepare(
-      "INSERT INTO users (username, password, role) VALUES (?, ?, ?)"
-    ).run("admin", hashed, "admin");
+      "INSERT INTO users (username, password, role, email) VALUES (?, ?, ?, ?)"
+    ).run("admin", hashed, "admin", "admin@example.com");
     console.log("Seeded admin/admin");
   }
 }
@@ -51,11 +58,13 @@ module.exports = {
   getUserByUsername: (username) =>
     db
       .prepare(
-        "SELECT id, username, password, role FROM users WHERE username=?"
+        "SELECT id, username, password, role, email FROM users WHERE username=?"
       )
       .get(username),
   getUserById: (id) =>
-    db.prepare("SELECT id, username, role FROM users WHERE id = ?").get(id),
+    db
+      .prepare("SELECT id, username, role, email FROM users WHERE id = ?")
+      .get(id),
   createShift: (user_id, shift_date, start_time, end_time, note = "") => {
     const stmt = db.prepare(
       "INSERT INTO shifts (user_id, shift_date, start_time, end_time, note) VALUES (?, ?, ?, ?, ?)"

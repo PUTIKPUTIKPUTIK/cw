@@ -3,6 +3,7 @@ import { Calendar, dateFnsLocalizer } from "react-big-calendar";
 import { format, parse, startOfWeek, getDay } from "date-fns";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import ru from "date-fns/locale/ru";
+import Modal from "react-modal";
 
 const locales = { ru: ru };
 const localizer = dateFnsLocalizer({
@@ -13,12 +14,15 @@ const localizer = dateFnsLocalizer({
   locales,
 });
 
+Modal.setAppElement("#root");
+
 function Dashboard() {
   const [shifts, setShifts] = useState([]);
   const [date, setDate] = useState("");
   const [start, setStart] = useState("");
   const [end, setEnd] = useState("");
-  const [userId, setUserId] = useState("");
+  const [username, setUsername] = useState("");
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const token = localStorage.getItem("token");
   const user = JSON.parse(localStorage.getItem("user") || "null");
@@ -45,7 +49,7 @@ function Dashboard() {
     }
 
     const body = {
-      user_id: userId || undefined,
+      username: username || undefined,
       shift_date: date,
       start_time: start,
       end_time: end,
@@ -62,7 +66,7 @@ function Dashboard() {
       setDate("");
       setStart("");
       setEnd("");
-      setUserId("");
+      setUsername("");
       fetchShifts();
     } else {
       const err = await res.json();
@@ -107,61 +111,115 @@ function Dashboard() {
           alignItems: "center",
         }}
       >
-        <h2>Shifts Calendar</h2>
-        <div>
-          <span style={{ marginRight: 10 }}>{user?.username}</span>
-          <button onClick={logout}>Logout</button>
+        <h2>Календарь смен</h2>
+        <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+          <span
+            style={{
+              marginRight: 10,
+              cursor: "pointer",
+              textDecoration: "underline",
+            }}
+            onClick={() => (window.location.href = "/profile")}
+          >
+            {user?.username}
+          </span>
+          <button onClick={logout}>Выйти</button>
         </div>
       </div>
 
-      <div style={{ height: 600, marginTop: 10 }}>
+      <div style={{ height: 600, width: 1000, marginTop: 10 }}>
         <Calendar
           localizer={localizer}
           events={events}
+          selectable
+          onSelectSlot={(slotInfo) => {
+            const dateStr = format(slotInfo.start, "yyyy-MM-dd");
+            const startTime = format(slotInfo.start, "HH:mm");
+            const endTime = format(slotInfo.end, "HH:mm");
+            setDate(dateStr);
+            setStart(startTime);
+            setEnd(endTime);
+            setIsModalOpen(true);
+          }}
           startAccessor="start"
           endAccessor="end"
           defaultView="week"
-          views={["month", "week", "day"]}
+          views={["week", "day"]}
           style={{ height: "100%" }}
         />
       </div>
-
-      <div style={{ marginTop: 20 }}>
-        <h3>Create shift</h3>
+      <Modal
+        isOpen={isModalOpen}
+        onRequestClose={() => setIsModalOpen(false)}
+        contentLabel="Создание смены"
+        style={{
+          content: {
+            width: "300px",
+            margin: "auto",
+            marginTop: "400px",
+            height: "200px",
+            borderRadius: "10px",
+            padding: "20px",
+            paddingTop: "0px",
+            background: "white",
+          },
+        }}
+      >
+        <h3>Создать смену</h3>
         <form
-          style={{ display: "flex", justifyContent: "center" }}
-          onSubmit={createShift}
+          onSubmit={async (e) => {
+            await createShift(e);
+            setIsModalOpen(false);
+          }}
         >
-          <input
-            type="date"
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-            style={{ marginRight: 10 }}
-            required
-          />
-          <input
-            type="time"
-            value={start}
-            onChange={(e) => setStart(e.target.value)}
-            required
-          />
-          <input
-            type="time"
-            value={end}
-            onChange={(e) => setEnd(e.target.value)}
-            style={{ marginRight: 10 }}
-            required
-          />
-          {/* Только для админа: можно указать user_id; для простоты оставим как текст */}
-          <input
-            placeholder="user_id (только для admin)"
-            value={userId}
-            onChange={(e) => setUserId(e.target.value)}
-            style={{ marginRight: 10 }}
-          />
-          <button type="submit">Add</button>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}>
+            <input
+              type="date"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+              required
+              style={{ marginRight: "32px" }}
+            />
+            <input
+              type="time"
+              value={start}
+              onChange={(e) => setStart(e.target.value)}
+              required
+            />
+            <p style={{ fontSize: "9px" }}>_</p>
+            <input
+              type="time"
+              value={end}
+              onChange={(e) => setEnd(e.target.value)}
+              required
+            />
+            {user?.role === "admin" && (
+              <label>
+                Пользователь:
+                <input
+                  style={{ marginLeft: "6px" }}
+                  type="text"
+                  placeholder="username"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                />
+              </label>
+            )}
+            <div
+              style={{
+                display: "flex",
+                width: "100%",
+                justifyContent: "space-between",
+              }}
+            >
+              <button type="submit">Создать</button>
+              <button type="button" onClick={() => setIsModalOpen(false)}>
+                Отмена
+              </button>
+            </div>
+          </div>
         </form>
-      </div>
+      </Modal>
     </div>
   );
 }
