@@ -83,7 +83,7 @@ function Dashboard() {
 
     if (!username || !date || !start || !end) {
       alert("Заполните сотрудника, дату, начало и конец смены");
-      return;
+      return false;
     }
 
     const body = {
@@ -107,9 +107,11 @@ function Dashboard() {
       setEnd("");
       setUsername("");
       fetchShifts();
+      return true;
     } else {
       const err = await res.json();
       alert(err.error || "Ошибка создания");
+      return false;
     }
   }
 
@@ -274,13 +276,18 @@ function Dashboard() {
         <form
           onSubmit={async (e) => {
             e.preventDefault();
+            let success = false;
+
             if (editShift) {
-              await updateShift(e);
+              success = await updateShift(e);
             } else {
-              await createShift(e);
+              success = await createShift(e);
             }
-            setIsModalOpen(false);
-            setEditShift(null);
+
+            if (success) {
+              setIsModalOpen(false);
+              setEditShift(null);
+            }
           }}
         >
           <div
