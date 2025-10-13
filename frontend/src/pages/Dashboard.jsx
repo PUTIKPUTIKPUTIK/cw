@@ -55,6 +55,7 @@ Modal.setAppElement("#root");
 
 function Dashboard() {
   const [shifts, setShifts] = useState([]);
+  const [users, setUsers] = useState([]);
   const [date, setDate] = useState("");
   const [start, setStart] = useState("");
   const [end, setEnd] = useState("");
@@ -67,6 +68,10 @@ function Dashboard() {
 
   useEffect(() => {
     fetchShifts();
+
+    if (user?.role === "admin") {
+      fetchUsers();
+    }
   }, []);
 
   async function fetchShifts() {
@@ -76,6 +81,16 @@ function Dashboard() {
 
     const data = await res.json();
     setShifts(data);
+  }
+
+  async function fetchUsers() {
+    const res = await fetch("http://localhost:4000/api/users", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    const data = await res.json();
+    console.log(data);
+    setUsers(data);
   }
 
   async function createShift(e) {

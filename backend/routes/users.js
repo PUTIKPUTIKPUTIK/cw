@@ -4,6 +4,22 @@ const auth = require("../middleware/auth");
 const db = require("../db");
 const bcrypt = require("bcrypt");
 
+router.get("/", auth, (req, res) => {
+  if (req.user.role !== "admin") {
+    return res.status(403).json({ error: "Доступ запрещен" });
+  }
+
+  try {
+    const users = db.db.prepare("SELECT id, username, email FROM users").all();
+    res.json(users);
+  } catch (err) {
+    console.error(err);
+    res
+      .status(500)
+      .json({ error: "Ошибка при получении списка пользователей" });
+  }
+});
+
 router.post("/update", auth, (req, res) => {
   const { email, password } = req.body;
   const user = db.getUserById(req.user.id);

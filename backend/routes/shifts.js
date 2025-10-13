@@ -19,8 +19,15 @@ router.post("/", auth, (req, res) => {
 
   const { username, shift_date, start_time, end_time, note } = req.body;
 
-  if (!shift_date || !start_time || !end_time) {
+  if (!username || !shift_date || !start_time || !end_time) {
     return res.status(400).json({ error: "Не все поля заполнены" });
+  }
+
+  const user = db.getUserByUsername(username);
+  if (!user) {
+    return res
+      .status(400)
+      .json({ error: `Пользователь ${username} не найден в системе` });
   }
 
   const shift = db.createShift(
